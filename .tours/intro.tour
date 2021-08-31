@@ -1,0 +1,116 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "Tink the gRPC server",
+  "steps": [
+    {
+      "title": "Introduction",
+      "description": "# Tink the gRPC server\n\nWelcome to the Tink gRPC server tour!\nIn this tour we will cover the following:\n\n1. The mechanisms for running the gRPC server.\n2. The protocol buffers for each gRPC service and RPCs (remote procedure call).\n3. The implementations of each service and RPC.\n\n## Background\n\nAs a bit of background before we get started, from a high level the Tink Server generally handles CRUD (create, read, update, delete) operations against the following resources.\n\n- Hardware\n- Templates\n- Workflows\n\n## Let's get started!\n"
+    },
+    {
+      "file": "cmd/tink-server/main.go",
+      "description": "# Running the gRPC server\n\nThis function starts the gRPC server.\n",
+      "line": 178
+    },
+    {
+      "file": "grpc-server/grpc_server.go",
+      "description": "# Running the gRPC server - certificates\n\nTink's gRPC server requires certificates for TLS.\nThe TLS key and bundle can be specified in 2 ways.\n\n1. Passed in via a CLI string flag (`--tls-cert`)\n    - `config.TLSCert` will be set with the value from this CLI flag\n2. Via 2 files named `bundle.pem` and `server-key.pem`, that are read from a directory defined by the CLI flag `--cert-dir`.\n",
+      "line": 63,
+      "selection": {
+        "start": {
+          "line": 63,
+          "character": 13
+        },
+        "end": {
+          "line": 63,
+          "character": 27
+        }
+      }
+    },
+    {
+      "file": "grpc-server/grpc_server.go",
+      "description": "# Running the gRPC server - register the Template gRPC service\n\nThis is where the Template service implementation is registered with the gRPC server.\nWe'll dive deeper into this implementation later.\n",
+      "line": 75
+    },
+    {
+      "file": "grpc-server/grpc_server.go",
+      "description": "# Running the gRPC server - register the Workflow gRPC service\n\nThis is where the Workflow service implementation is registered with the gRPC server.\nWe'll dive deeper into this implementation later.\n",
+      "line": 76
+    },
+    {
+      "file": "grpc-server/grpc_server.go",
+      "description": "# Running the gRPC server - register the Hardware gRPC service\n\nThis is where the Hardware service implementation is registered with the gRPC server.\nWe'll dive deeper into this implementation later.\n",
+      "line": 77
+    },
+    {
+      "file": "grpc-server/grpc_server.go",
+      "description": "# Running the gRPC server - create the TCP listener\n\nThis is where we listen for TCP connections on the IP:Port defined in `config.GRPCAuthority`.\nThis defaults to `\":42113\"` and can be specified via the CLI flag `--grpc-authority`.\n",
+      "line": 83,
+      "selection": {
+        "start": {
+          "line": 83,
+          "character": 33
+        },
+        "end": {
+          "line": 83,
+          "character": 53
+        }
+      }
+    },
+    {
+      "file": "grpc-server/grpc_server.go",
+      "description": "# Running the gRPC server - start the gRPC server\n\nThis is where we finally start the gRPC server on the supplied listener.\n",
+      "line": 90
+    },
+    {
+      "file": "protos/hardware/hardware.proto",
+      "description": "# Protocol buffers - Hardware Service\n\nThis is the protocol buffer definition for the Hardware Service.\nIt has 6 RPCs.\n\n1. Push (create/update operation)\n2. ByMAC (read operation)\n3. ByIP (read operation)\n4. ByID (read operation)\n5. All (read operation)\n6. Delete (delete operation)\n\nA sample `json` file and description of the fields for a Push RPC can be found [here](https://docs.tinkerbell.org/hardware-data/).\n",
+      "line": 24,
+      "selection": {
+        "start": {
+          "line": 57,
+          "character": 27
+        },
+        "end": {
+          "line": 57,
+          "character": 33
+        }
+      }
+    },
+    {
+      "file": "protos/template/template.proto",
+      "description": "# Protocol buffers - Template Service\n\nThis is the protocol buffer definition for the Template Service. It has 5 RPCs.\n\n1. CreateTemplate (create operation)\n2. GetTemplate (read operation)\n3. DeleteTemplate (delete operation)\n4. ListTemplates (read operation)\n5. UpdateTemplates (update operation)\n\nA sample yaml file and description of the fields for a CreateTemplate RPC can be found [here](https://docs.tinkerbell.org/templates/).\n",
+      "line": 21,
+      "selection": {
+        "start": {
+          "line": 59,
+          "character": 22
+        },
+        "end": {
+          "line": 59,
+          "character": 38
+        }
+      }
+    },
+    {
+      "file": "protos/workflow/workflow.proto",
+      "description": "# Protocol buffers - Workflow Service\n\nThis is the protocol buffer definition for the Workflow Service. It has 14 RPCs.\n\n1. CreateWorkflow (create operation)\n2. GetWorkflow (read operation)\n3. DeleteWorkflow (delete operation)\n4. ListWorkflows (read operation)\n5. GetWorkflowContext (read operation)\n6. ShowWorkflowEvents (read operation)\n7. GetWorkflowContextList (read operation)\n8. GetWorkflowContexts (read operation)\n9. GetWorkflowActions (read operation)\n10. ReportActionStatus (create operation)\n11. GetWorkflowData (read operation)\n12. GetWorkflowMetadata (read operation)\n13. GetWorkflowDataVersion (read operation)\n14. UpdateWorkflowData (update operation)\n",
+      "line": 18,
+      "selection": {
+        "start": {
+          "line": 81,
+          "character": 7
+        },
+        "end": {
+          "line": 81,
+          "character": 25
+        }
+      }
+    },
+    {
+      "file": "grpc-server/hardware.go",
+      "description": "# Implementations - Hardware - Push\n\nThis is the implementation of the Push RPC of the Hardware Service.\n\n- The only required field is `id`.\n- The optional field `network.interfaces[].dhcp.mac` must be unique.\n- All error returns are of [status code 2](https://grpc.github.io/grpc/core/md_doc_statuscodes.html) `Unknown`, so clients must key of the string text of the error.\n\nA full description of fields can be found [here](https://docs.tinkerbell.org/hardware-data/).\n",
+      "line": 24
+    }
+  ],
+  "description": "From a high level, the Tink Server generally handles CRUD (create, read, update, delete) actions against the following resources. Hardware, Templates, Workflows"
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "Tink worker",
+  "steps": [
+    {
+      "title": "Introduction",
+      "description": ""
+    }
+  ]
+}

@@ -108,8 +108,13 @@
     },
     {
       "file": "grpc-server/hardware.go",
-      "description": "# Implementations - Hardware - Push\n\nThis is the implementation of the Push RPC of the Hardware Service.\n\n- The only required field is `id`.\n- The optional field `network.interfaces[].dhcp.mac` must be unique.\n- All error returns are of [status code 2](https://grpc.github.io/grpc/core/md_doc_statuscodes.html) `Unknown`, so clients must key of the string text of the error.\n\nA full description of fields can be found [here](https://docs.tinkerbell.org/hardware-data/).\n",
+      "description": "# Implementations - Hardware - Push\n\nThis is the implementation of the Push RPC of the Hardware Service.\n`Push` provides create and update functionality.\n\n- The only required field is `id`.\n  - If `id` is not unique, the Push request will be handled by updating the Hardware record corresponding to the provided `id`.\n  - If `id` is unique, then the Push request will be handled by creating a new Hardware record corresponding to the provided `id`.\n- The optional field `network.interfaces[].dhcp.mac` must be unique across records.\n  - It is possible (bug report [#532](https://github.com/tinkerbell/tink/issues/532)) to have a single Hardware record with duplicate mac fields. `network.interfaces[0].dhcp.mac == network.interfaces[1].dhcp.mac`.\n- All error returns are of [status code 2](https://grpc.github.io/grpc/core/md_doc_statuscodes.html) `Unknown`, so clients must key off the string text of the error.\n\nA full description of fields can be found [here](https://docs.tinkerbell.org/hardware-data/).\n\n>FYI the `hardware.proto` spec says \"Read access to individual hardware profiles is provided through the unique ID, MAC, and IP hardware properties.\" but there is only enforcement of uniqueness for the `network.interfaces[].dhcp.mac` field across Hardware records.\n",
       "line": 24
+    },
+    {
+      "file": "grpc-server/hardware.go",
+      "description": "# Implementations - Hardware - All\n\nThis is the implementation of the All RPC of the Hardware Service.\n",
+      "line": 151
     }
   ],
   "description": "From a high level, the Tink Server generally handles CRUD (create, read, update, delete) actions against the following resources. Hardware, Templates, Workflows"

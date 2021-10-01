@@ -13,16 +13,16 @@
     },
     {
       "file": "grpc-server/grpc_server.go",
-      "description": "# Running the gRPC server - certificates\n\nTink's gRPC server requires certificates for TLS.\nThe TLS key and bundle can be specified in 2 ways.\n\n1. Passed in via a CLI string flag (`--tls-cert`)\n    - `config.TLSCert` will be set with the value from this CLI flag\n2. Via 2 files named `bundle.pem` and `server-key.pem`, that are read from a directory defined by the CLI flag `--cert-dir`.\n",
+      "description": "# Running the gRPC server - certificates\n\nTink's gRPC server can be run with or without TLS.\n\nTo use TLS 2 files must be provided; `bundle.pem` and `server-key.pem`.\nThese files are read from a directory defined by the CLI flag `--cert-dir`.\n\nIf you do not want to run Tink Server with TLS you must still provide a TLS public certificate.\nThis certificate will be served at `http://tink-server:42114/cert`.\n",
       "line": 63,
       "selection": {
         "start": {
-          "line": 63,
-          "character": 13
+          "line": 70,
+          "character": 72
         },
         "end": {
-          "line": 63,
-          "character": 27
+          "line": 70,
+          "character": 79
         }
       }
     },

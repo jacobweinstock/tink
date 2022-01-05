@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/keepalive"
 )
 
 // ObtainServerCreds obtains tink-server credentials from the TLS certificate found at certURL.
@@ -50,7 +52,12 @@ func EstablishServerConnection(grpcAuthority string, creds credentials.Transport
 		return nil, errors.New("grpcAuthority cannot be empty")
 	}
 
-	conn, err := grpc.Dial(grpcAuthority, grpc.WithTransportCredentials(creds))
+	keepaliveParams := keepalive.ClientParameters{
+		Time:                2 * time.Minute, // send pings every two minutes if there is no activity
+		Timeout:             5 * time.Second, // wait 5 seconds for ping back
+		PermitWithoutStream: true,            // send pings even without active streams
+	}
+	conn, err := grpc.Dial(grpcAuthority, grpc.WithTransportCredentials(creds), grpc.WithKeepaliveParams(keepaliveParams), grpc.WithBlock(), grpc.FailOnNonTempDialError(true))
 	if err != nil {
 		return nil, errors.New("connect to tinkerbell server")
 	}

@@ -54,6 +54,7 @@ func startWorkflowServerAndConnectClient(t *testing.T, name string, server *grpc
 		return listener.DialContext(ctx)
 	}
 
+	// nolint:staticcheck // suppress grpc.WithInsecure() deprecation warning
 	conn, err := ggrpc.DialContext(ctx, "bufnet", ggrpc.WithContextDialer(dialer), ggrpc.WithInsecure())
 	if err != nil {
 		t.Fatalf("Failed to dial %s: %v", name, err)

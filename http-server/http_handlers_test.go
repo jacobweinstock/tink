@@ -66,6 +66,7 @@ func TestHardwarePushHandler(t *testing.T) {
 		t.Log(name)
 
 		mux := grpcRuntime.NewServeMux()
+		// nolint:staticcheck // suppress grpc.WithInsecure() deprecation warning
 		dialOpts := []grpc.DialOption{grpc.WithContextDialer(bufDialer), grpc.WithInsecure()}
 		grpcEndpoint := "localhost:42113"
 

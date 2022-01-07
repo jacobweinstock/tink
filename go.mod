@@ -7,7 +7,10 @@ require (
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v20.10.7+incompatible
 	github.com/equinix-labs/otel-init-go v0.0.1
+	github.com/go-logr/logr v1.2.2 // indirect
+	github.com/go-logr/zerologr v1.2.1 // indirect
 	github.com/go-openapi/strfmt v0.19.3 // indirect
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.2.0
@@ -24,6 +27,7 @@ require (
 	github.com/peterbourgon/ff v1.7.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
+	github.com/rs/zerolog v1.26.1 // indirect
 	github.com/rubenv/sql-migrate v0.0.0-20200616145509-8d140a17f351
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5

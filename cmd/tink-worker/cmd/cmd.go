@@ -16,6 +16,7 @@ const (
 	defaultRetryInterval        = 3 // 3s
 	defaultTimeoutMinutes       = 60
 	programVersion              = "devel"
+	defaultLogLevel             = "info"
 )
 
 type FlagEnvSettings struct {
@@ -30,6 +31,7 @@ type FlagEnvSettings struct {
 	RetryInterval           int
 	Timeout                 int
 	Version                 bool
+	LogLevel                string
 }
 
 // Usage prints the help screen.
@@ -47,8 +49,8 @@ Flags:
     --retry-interval duration    Retry interval (seconds) (RETRY_INTERVAL) (default %ds)
     --timeout duration           Max duration (minutes) to wait for worker to complete (TIMEOUT) (default %dm)
 -v, --version                    Print version string
-`, defaultMaxFileSize, defaultMaxRetry, defaultRetryInterval, defaultTimeoutMinutes)
-
+-l, --loglevel string		 Set Log level info(default), debug, trace (default %s)
+`, defaultMaxFileSize, defaultMaxRetry, defaultRetryInterval, defaultTimeoutMinutes, defaultLogLevel)
 	fmt.Print(usageHelp)
 }
 
@@ -79,6 +81,8 @@ func parseFlagEnvSettings(args []string) (FlagEnvSettings, error) {
 	fs.StringVar(&flags.WorkerID, "i", "", "")
 	fs.BoolVar(&flags.Version, "version", false, "")
 	fs.BoolVar(&flags.Version, "v", false, "")
+	fs.StringVar(&flags.LogLevel, "loglevel", defaultLogLevel, "")
+	fs.StringVar(&flags.LogLevel, "l", defaultLogLevel, "")
 
 	// flags that are long-options only
 	fs.Int64Var(&flags.MaxFileSize, "max-file-size", defaultMaxFileSize, "")

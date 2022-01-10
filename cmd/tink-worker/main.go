@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"os"
 	"time"
 
+	"github.com/equinix-labs/otel-init-go/otelinit"
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zerologr"
 	"github.com/rs/zerolog"
@@ -23,6 +25,10 @@ func main() {
 		os.Exit(1)
 	}
 	logger := getLogger(flagEnvSettings.LogLevel)
+
+	ctx := context.Background()
+	ctx, otelShutdown := otelinit.InitOpenTelemetry(ctx, "tink-worker")
+	defer otelShutdown(ctx)
 
 	// Randomized sleep function. Used when retrying failed connections to tink server.
 	sleepFn := func() {

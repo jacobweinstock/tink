@@ -53,7 +53,9 @@ func (d *Docker) Run(ctx context.Context, id string, logs chan []byte) error {
 	}
 
 	// stream logs
-	go d.streamLogs(ctx, id, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Follow: true}, logs)
+	go func() {
+		_ = d.streamLogs(ctx, id, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Follow: true}, logs)
+	}()
 
 	var detail types.ContainerJSON
 	var complete bool

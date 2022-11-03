@@ -3,13 +3,13 @@ package worker
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/tinkerbell/tink/protos/workflow"
 )
 
+/*
 func actionController(ctx context.Context, logger logr.Logger, queue <-chan *workflow.WorkflowAction) {
 	for {
 		select {
@@ -24,7 +24,7 @@ func actionController(ctx context.Context, logger logr.Logger, queue <-chan *wor
 	}
 }
 
-/*func statusReportController(ctx context.Context, logger logr.Logger, queue <-chan *workflow.WorkflowActionStatus) {
+func statusReportController(ctx context.Context, logger logr.Logger, queue <-chan *workflow.WorkflowActionStatus) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -36,7 +36,8 @@ func actionController(ctx context.Context, logger logr.Logger, queue <-chan *wor
 			time.Sleep(time.Second)
 		}
 	}
-}*/
+}
+*/
 
 // Run executes an action until successful or the context is cancelled.
 func Run(ctx context.Context, logger logr.Logger, cm ContainerRunner, action *workflow.WorkflowAction) {

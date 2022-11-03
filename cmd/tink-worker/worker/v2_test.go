@@ -13,6 +13,7 @@ import (
 	"github.com/tinkerbell/tink/protos/workflow"
 )
 
+/*
 func TestController(t *testing.T) {
 	t.Skip()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
@@ -39,6 +40,7 @@ func TestController(t *testing.T) {
 	time.Sleep(time.Second * 6)
 	t.Fail()
 }
+*/
 
 func TestExecuteAction(t *testing.T) {
 	t.Skip()

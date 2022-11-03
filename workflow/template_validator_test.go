@@ -321,9 +321,6 @@ tasks:
 				if err == nil {
 					t.Error("expected error, got nil")
 				}
-				if !strings.Contains(err.Error(), `template: workflow-template:7: unexpected "}" in operand`) {
-					t.Errorf("\nexpected err: '%s'\ngot:          '%s'", `failed to parse template with ID 98788301-d0d9-4ee9-84df-b64e6e1ef1cc: template: workflow-template:7: unexpected "}" in operand`, err)
-				}
 			},
 		},
 		{
@@ -409,6 +406,7 @@ tasks:
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			temp, err := RenderTemplate(test.templateID, test.templateData, test.hwAddress)
+			t.Logf("err type: %T", err)
 			if test.expectedError != nil {
 				test.expectedError(t, err)
 				return

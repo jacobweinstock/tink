@@ -175,7 +175,7 @@ check-proto: generate-proto
 
 .PHONY: verify
 verify: lint check-generated ## Verify code style, is lint free, freshness ...
-	$(GOFUMPT) -s -d .
+	$(GOFUMPT) -d .
 
 .PHONY: ci-checks
 ci-checks: ## Run ci-checks.sh script

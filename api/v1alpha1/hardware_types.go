@@ -150,6 +150,22 @@ type HardwareMetadata struct {
 	Instance     *MetadataInstance     `json:"instance,omitempty"`
 	Custom       *MetadataCustom       `json:"custom,omitempty"`
 	Facility     *MetadataFacility     `json:"facility,omitempty"`
+	Secret       *Secret               `json:"secret,omitempty"`
+}
+
+// Secret holds reference to the secret and signing mechanism for securely passing secrets to clients.
+type Secret struct {
+	// Ref is the SecretReference that contains secret data.
+	Ref corev1.SecretReference `json:"ref,omitempty"`
+	// Signing holds the data used to sign secrets.
+	Signing *Signing `json:"signing,omitempty"`
+}
+
+// Signing holds the data used to sign secrets. This is used to securely pass
+// secrets to clients.
+type Signing struct {
+	Algorithm string `json:"algorithm,omitempty"`
+	Key       string `json:"key,omitempty"`
 }
 
 type MetadataManufacturer struct {

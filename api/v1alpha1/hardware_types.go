@@ -169,7 +169,7 @@ type Encryption struct {
 	// KeyRef is a reference to the key to use for encryption.
 	KeyRef corev1.SecretReference `json:"key_ref,omitempty"`
 	// Mode is the type, or lack there of, of encryption to use.
-	// +kubebuilder:validation:Enum=public-key;share-key;base64-only
+	// +kubebuilder:validation:Enum=public-key;shared-key;base64-only
 	Mode EncryptionMode `json:"mode,omitempty"`
 }
 

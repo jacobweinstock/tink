@@ -377,7 +377,7 @@ spec:
                               description: Mode is the type, or lack there of, of encryption to use.
                               enum:
                                 - public-key
-                                - share-key
+                                - shared-key
                                 - base64-only
                               type: string
                           type: object

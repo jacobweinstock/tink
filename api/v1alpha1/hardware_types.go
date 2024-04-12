@@ -155,8 +155,8 @@ type HardwareMetadata struct {
 
 // Secret holds reference to the secret and signing mechanism for securely passing secrets to clients.
 type Secret struct {
-	// Ref is the SecretReference that contains secret data.
-	Ref corev1.SecretReference `json:"ref,omitempty"`
+	// DataRef is the SecretReference that contains secret data.
+	DataRef corev1.SecretReference `json:"dataRef,omitempty"`
 	// Encryption holds the data used to sign secrets.
 	Encryption *Encryption `json:"encryption,omitempty"`
 }
@@ -166,8 +166,8 @@ type Secret struct {
 type Encryption struct {
 	// Algorithm is the type of encryption algorithm to use. This should match the type of Key defined.
 	Algorithm string `json:"algorithm,omitempty"`
-	// Key is a reference to the key to use for encryption.
-	Key corev1.SecretReference `json:"key,omitempty"`
+	// KeyRef is a reference to the key to use for encryption.
+	KeyRef corev1.SecretReference `json:"keyRef,omitempty"`
 	// Mode is the type, or lack there of, of encryption to use.
 	// +kubebuilder:validation:Enum=public-key;share-key;base64-only
 	Mode EncryptionMode `json:"mode,omitempty"`

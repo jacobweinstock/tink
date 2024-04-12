@@ -345,6 +345,31 @@ spec:
                     secret:
                       description: Secret holds reference to the secret and signing mechanism for securely passing secrets to clients.
                       properties:
+                        encryption:
+                          description: Encryption holds the data used to sign secrets.
+                          properties:
+                            algorithm:
+                              description: Algorithm is the type of encryption algorithm to use. This should match the type of Key defined.
+                              type: string
+                            key:
+                              description: Key is a reference to the key to use for encryption.
+                              properties:
+                                name:
+                                  description: name is unique within a namespace to reference a secret resource.
+                                  type: string
+                                namespace:
+                                  description: namespace defines the space within which the secret name must be unique.
+                                  type: string
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            mode:
+                              description: Mode is the type, or lack there of, of encryption to use.
+                              enum:
+                                - public-key
+                                - share-key
+                                - base64-only
+                              type: string
+                          type: object
                         ref:
                           description: Ref is the SecretReference that contains secret data.
                           properties:
@@ -356,14 +381,6 @@ spec:
                               type: string
                           type: object
                           x-kubernetes-map-type: atomic
-                        signing:
-                          description: Signing holds the data used to sign secrets.
-                          properties:
-                            algorithm:
-                              type: string
-                            key:
-                              type: string
-                          type: object
                       type: object
                     state:
                       default: provisioning

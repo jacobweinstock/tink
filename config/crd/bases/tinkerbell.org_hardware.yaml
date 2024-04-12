@@ -345,7 +345,7 @@ spec:
                     secret:
                       description: Secret holds reference to the secret and signing mechanism for securely passing secrets to clients.
                       properties:
-                        dataRef:
+                        data_ref:
                           description: DataRef is the SecretReference that contains secret data.
                           properties:
                             name:
@@ -362,7 +362,7 @@ spec:
                             algorithm:
                               description: Algorithm is the type of encryption algorithm to use. This should match the type of Key defined.
                               type: string
-                            keyRef:
+                            key_ref:
                               description: KeyRef is a reference to the key to use for encryption.
                               properties:
                                 name:

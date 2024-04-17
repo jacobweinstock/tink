@@ -345,17 +345,6 @@ spec:
                     secret:
                       description: Secret holds reference to the secret and signing mechanism for securely passing secrets to clients.
                       properties:
-                        data_ref:
-                          description: DataRef is the SecretReference that contains secret data.
-                          properties:
-                            name:
-                              description: name is unique within a namespace to reference a secret resource.
-                              type: string
-                            namespace:
-                              description: namespace defines the space within which the secret name must be unique.
-                              type: string
-                          type: object
-                          x-kubernetes-map-type: atomic
                         encryption:
                           description: Encryption holds the data used to sign secrets.
                           properties:
@@ -381,6 +370,22 @@ spec:
                                 - base64-only
                               type: string
                           type: object
+                        secrets:
+                          description: Secrets is a list of SecretReference that contains secret data.
+                          items:
+                            description: |-
+                              SecretReference represents a Secret Reference. It has enough information to retrieve secret
+                              in any namespace
+                            properties:
+                              name:
+                                description: name is unique within a namespace to reference a secret resource.
+                                type: string
+                              namespace:
+                                description: namespace defines the space within which the secret name must be unique.
+                                type: string
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          type: array
                       type: object
                     state:
                       default: provisioning

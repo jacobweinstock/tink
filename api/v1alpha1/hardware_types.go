@@ -155,8 +155,8 @@ type HardwareMetadata struct {
 
 // Secret holds reference to the secret and signing mechanism for securely passing secrets to clients.
 type Secret struct {
-	// DataRef is the SecretReference that contains secret data.
-	DataRef corev1.SecretReference `json:"data_ref,omitempty"`
+	// Secrets is a list of SecretReference that contains secret data.
+	Secrets []corev1.SecretReference `json:"secrets,omitempty"`
 	// Encryption holds the data used to sign secrets.
 	Encryption *Encryption `json:"encryption,omitempty"`
 }

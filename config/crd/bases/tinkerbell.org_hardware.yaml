@@ -362,7 +362,7 @@ spec:
                                   type: string
                               type: object
                               x-kubernetes-map-type: atomic
-                            mode:
+                            strategy:
                               description: Strategy is the type, or lack there of, of encryption to use.
                               enum:
                                 - public-key

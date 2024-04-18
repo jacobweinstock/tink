@@ -170,7 +170,7 @@ type Encryption struct {
 	KeyRef corev1.SecretReference `json:"key_ref,omitempty"`
 	// Strategy is the type, or lack there of, of encryption to use.
 	// +kubebuilder:validation:Enum=public-key;shared-key;base64-only
-	Strategy EncryptionStrategy `json:"mode,omitempty"`
+	Strategy EncryptionStrategy `json:"strategy,omitempty"`
 }
 
 type EncryptionStrategy string

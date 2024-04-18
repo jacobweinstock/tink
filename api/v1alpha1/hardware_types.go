@@ -168,12 +168,12 @@ type Encryption struct {
 	Algorithm string `json:"algorithm,omitempty"`
 	// KeyRef is a reference to the key to use for encryption.
 	KeyRef corev1.SecretReference `json:"key_ref,omitempty"`
-	// Mode is the type, or lack there of, of encryption to use.
+	// Strategy is the type, or lack there of, of encryption to use.
 	// +kubebuilder:validation:Enum=public-key;shared-key;base64-only
-	Mode EncryptionMode `json:"mode,omitempty"`
+	Strategy EncryptionStrategy `json:"mode,omitempty"`
 }
 
-type EncryptionMode string
+type EncryptionStrategy string
 
 type MetadataManufacturer struct {
 	ID   string `json:"id,omitempty"`

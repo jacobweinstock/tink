@@ -363,7 +363,7 @@ spec:
                               type: object
                               x-kubernetes-map-type: atomic
                             mode:
-                              description: Mode is the type, or lack there of, of encryption to use.
+                              description: Strategy is the type, or lack there of, of encryption to use.
                               enum:
                                 - public-key
                                 - shared-key

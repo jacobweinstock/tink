@@ -74,14 +74,15 @@ const (
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:categories=tinkerbell,shortName=pl
-// +kubebuilder:printcolumn:name="Hardware",type="string",JSONPath=".status.currentHardware",description="Hardware that is currently that corresponds to the current Agent and Workflow"
+// +kubebuilder:printcolumn:name="Hardware",type="string",JSONPath=".status.currentHardware",description="Hardware that corresponds to the current Agent and Workflow"
 // +kubebuilder:printcolumn:name="Workflow",type="string",JSONPath=".status.CurrentWorkflow",description="Workflow that is currently be run by the associated Agent"
 // +kubebuilder:printcolumn:name="AgentID",type="string",JSONPath=".status.CurrentAgent",description="ID of the Agent that is running the current Workflow"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state",description="Overall state of the Pipeline such as Pending,Running etc"
-// +kubebuilder:printcolumn:name="Action",type="string",JSONPath=".status.currentAction",description="Action that currently being executed"
+// +kubebuilder:printcolumn:name="Action",type="string",JSONPath=".status.currentAction",description="Action that is currently being executed"
 
-// Pipeline describes a set of actions to be run on a specific Hardware. Workflows execute
-// once and should be considered ephemeral.
+// Pipeline describes a set of Workflows to be run by corresponding Agents. Workflows in the Pipeline are execute sequentially. Each Workflow executes until it succeeds or fails.
+// A failed Worfklow will stop the Pipeline from executing further Workflows.
+// The Pipeline is considered successful if all Workflows succeed. The Pipeline is considered failed if any Workflow fails.
 type Pipeline struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -170,8 +171,8 @@ type PipelineStatus struct {
 	// CurrentAgent is the agent that is currently being used.
 	CurrentAgent string `json:"currentAgent,omitempty"`
 
-	// BootOptions holds the state of any boot options.
-	BootOptions BootOptionsStatus `json:"bootOptions,omitempty"`
+	// BootOptions holds the state of any boot options. TODO(jacobweinstock): this should probably map to each workflow.
+	BootOptions map[string]BootOptionsStatus `json:"bootOptions,omitempty"`
 
 	// WorkflowRendering indicates whether the Workflow was rendered successfully.
 	// Possible values are "succeeded" or "failed" or "unknown".

@@ -17,7 +17,7 @@ type WorkflowSpec struct {
 	Volumes []Volume `json:"volumes,omitempty"`
 
 	// Env defines environment variables to be available in all Actions. If an Action specifies
-	// the same environment variable it will take precedence.
+	// the same environment variable, the Action's environment variable will take precedence.
 	// +optional
 	Env map[string]string `json:"env,omitempty"`
 
@@ -36,12 +36,11 @@ type Action struct {
 	Image string `json:"image"`
 
 	// Cmd defines the command to use when launching the image. It overrides the default command
-	// of the Action. It must be a unix path to an executable program.
+	// defined in the Image.
 	// +optional
 	Cmd *string `json:"cmd,omitempty"`
 
-	// Args are a set of arguments to be passed to the command executed by the container on
-	// launch.
+	// Args are a set of arguments to be passed to the command executed by the container on launch.
 	// +optional
 	Args []string `json:"args,omitempty"`
 
@@ -63,11 +62,11 @@ type Action struct {
 	// +kubebuilder:validation:Minimum=0
 	TimeoutSeconds *int64 `json:"timeout,omitempty"`
 
-	// Background true will run the container in background. The Agent will immediately report the Action as succeeded.
+	// Background true will run the container in the background or as some runtimes call it detached mode. When set to true, the Agent will immediately report the Action as having succeeded.
 	// +optional
 	Background *bool `json:"background,omitempty"`
 
-	// Retries defines the number of times to retry the Action if it fails. Retries are only attempted on non-zero exit codes.
+	// Retries defines the number of times the Agent will retry the Action if it fails, not including Timeouts. Retries are only attempted on non-zero exit codes.
 	// +optional
 	Retries *int32 `json:"retries,omitempty"`
 }
@@ -101,19 +100,19 @@ type Namespace struct {
 
 // Logging defines
 type Logging struct {
-	// Driver is the logging driver to use for the container.
+	// Driver is the logging driver to use for Action containers.
 	Driver string `json:"driver,omitempty"`
 
-	// Options are the logging options to use for the container.
+	// Options are the logging options to use for Action containers.
 	Options map[string]string `json:"options,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:categories=tinkerbell,shortName=bp
 
-// Workflow defines a set of Actions to be run on a target machine. The Workflow is rendered
+// Workflow defines a set of Actions to be run by an Agent. The Workflow is rendered
 // prior to execution where it is exposed to Hardware and user defined data. Most fields within the
-// WorkflowSpec may contain templates values excluding .Workflow.Spec.Actions[].Name.
+// WorkflowSpec may contain template values excluding .Workflow.Spec.Actions[].Name.
 // See https://pkg.go.dev/text/template for more details.
 type Workflow struct {
 	metav1.TypeMeta   `json:",inline"`

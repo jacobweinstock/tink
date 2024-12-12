@@ -652,7 +652,13 @@ func (in *PipelineStatus) DeepCopyInto(out *PipelineStatus) {
 		*out = (*in).DeepCopy()
 	}
 	in.LastTransition.DeepCopyInto(&out.LastTransition)
-	in.BootOptions.DeepCopyInto(&out.BootOptions)
+	if in.BootOptions != nil {
+		in, out := &in.BootOptions, &out.BootOptions
+		*out = make(map[string]BootOptionsStatus, len(*in))
+		for key, val := range *in {
+			(*out)[key] = *val.DeepCopy()
+		}
+	}
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
 		*out = make(Conditions, len(*in))

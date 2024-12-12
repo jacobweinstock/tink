@@ -6,8 +6,9 @@ import (
 )
 
 type HardwareSpec struct {
-	// NetworkInterfaces defines the desired DHCP and netboot configuration for a network interface.
+	// NetworkInterfaces defines the desired IPAM and netboot configuration for a network interface.
 	// +kubebuilder:validation:MinPoperties=1
+	// +listType=map
 	NetworkInterfaces NetworkInterfaces `json:"networkInterfaces,omitempty"`
 
 	// OSIE describes the Operating System Installation Environment (OSIE) to be used when booting.
@@ -43,7 +44,7 @@ type OSIE struct {
 	// +optional
 	KernelParams []string `json:"kernelParams,omitempty"`
 
-	// ISOURL is the URL of the ISO that will be used for the installation environment.A spec.BmcRef must be provided.
+	// ISOURL is the URL of the ISO that will be used for the installation environment. A spec.BmcRef must be specified and exist.
 	// +kubebuilder:validation:Format=url
 	// +optional
 	ISOURL string `json:"isoUrl,omitempty"`

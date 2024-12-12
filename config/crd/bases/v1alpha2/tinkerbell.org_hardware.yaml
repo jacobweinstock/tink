@@ -1,0 +1,223 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.3
+  name: hardware.tinkerbell.org
+spec:
+  group: tinkerbell.org
+  names:
+    categories:
+      - tinkerbell
+    kind: Hardware
+    listKind: HardwareList
+    plural: hardware
+    shortNames:
+      - hw
+    singular: hardware
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: Baseboard management computer attached to the Hardware
+          jsonPath: .spec.bmcRef
+          name: BMC
+          type: string
+      name: v1alpha2
+      schema:
+        openAPIV3Schema:
+          description: Hardware is a logical representation of a machine that can execute Workflows.
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              properties:
+                bmcRef:
+                  description: BMCRef references a machine.bmc.tinkerbell.org object.
+                  properties:
+                    name:
+                      default: ""
+                      description: |-
+                        Name of the referent.
+                        This field is effectively required, but due to backwards compatibility is
+                        allowed to be empty. Instances of this type with an empty value here are
+                        almost certainly wrong.
+                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                instance:
+                  description: Instance describes instance specific data that is generally unused by Tinkerbell core.
+                  properties:
+                    userdata:
+                      description: Userdata is data with a structure understood by the producer and consumer of the data.
+                      type: string
+                    vendordata:
+                      description: Vendordata is data with a structure understood by the producer and consumer of the data.
+                      type: string
+                  type: object
+                networkInterfaces:
+                  additionalProperties:
+                    description: NetworkInterface is the desired configuration for a particular network interface.
+                    properties:
+                      disableDhcp:
+                        default: false
+                        description: DisableDHCP disables DHCP for this interface. Implies DisableNetboot.
+                        type: boolean
+                      disableNetboot:
+                        default: false
+                        description: DisableNetboot disables networking booting for this interface.
+                        type: boolean
+                      ipam:
+                        description: IPAM is the basic network information for serving IPAM requests. Required when DisableDHCP is false.
+                        properties:
+                          gateway:
+                            description: Gateway is the default gateway address to serve. Can be either an IPv4 or IPv6 address but must match the IPType field.
+                            pattern: (25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}
+                            type: string
+                          hostname:
+                            pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9]"[A-Za-z0-9\-]*[A-Za-z0-9])$
+                            type: string
+                          ip:
+                            description: IP is an address. Can be either an IPv4 or IPv6 address but must match the IPType field.
+                            pattern: (25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}
+                            type: string
+                          ipType:
+                            default: IPv4
+                            description: IPType is the type of IP address to serve. Defaults to IPv4. Must be either IPv4 or IPv6.
+                            enum:
+                              - IPv4
+                              - IPv6
+                            type: string
+                          leaseTimeSeconds:
+                            default: 86400
+                            description: |-
+                              LeaseTimeSeconds to serve. 24h default. Maximum equates to max uint32 as defined by RFC 2132
+                              § 9.2 (https://www.rfc-editor.org/rfc/rfc2132.html#section-9.2).
+                            format: int64
+                            maximum: 4294967295
+                            minimum: 0
+                            type: integer
+                          nameservers:
+                            description: Nameservers to serve.
+                            items:
+                              description: Nameserver is an IP or hostname.
+                              pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
+                              type: string
+                            type: array
+                          netmask:
+                            description: Netmask is an IPv4 netmask. When IPType=IPv4, this field is required. Otherwise, it is ignored.
+                            type: string
+                          prefix:
+                            description: Prefix is an IPv6 prefix length. When IPType=IPv6, this field is required. Otherwise, it is ignored.
+                            format: int32
+                            type: integer
+                          timeservers:
+                            description: Timeservers to serve.
+                            items:
+                              description: Timeserver is an IP or hostname.
+                              pattern: ^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$
+                              type: string
+                            type: array
+                          vlanId:
+                            description: VLANID is a VLAN ID between 0 and 4096.
+                            format: int32
+                            maximum: 4096
+                            minimum: 0
+                            type: integer
+                        type: object
+                      osie:
+                        description: |-
+                          OSIE describes the Operating System Installation Environment (OSIE) to be used when booting.
+                          This field overrides the OSIE field in the top level .spec.OSIE.
+                        properties:
+                          initrdUrl:
+                            description: InitrdURL is a URL to an initrd image used for the installation environment.
+                            format: url
+                            type: string
+                          ipxe:
+                            description: IPXE provides iPXE script override fields. This is useful for debugging or netboot customization.
+                            properties:
+                              content:
+                                description: Content is an inline iPXE script.
+                                type: string
+                              url:
+                                description: URL is a URL to a hosted iPXE script.
+                                type: string
+                            type: object
+                          isoUrl:
+                            description: ISOURL is the URL of the ISO that will be used for the installation environment.A spec.BmcRef must be provided.
+                            format: url
+                            type: string
+                          kernelParams:
+                            description: KernelParams passed to the kernel when launching the OSIE. Parameters are joined with a space.
+                            items:
+                              type: string
+                            type: array
+                          kernelUrl:
+                            description: KernelURL is a URL to a kernel image used for the installation environment.
+                            format: url
+                            type: string
+                        type: object
+                    type: object
+                  description: NetworkInterfaces defines the desired DHCP and netboot configuration for a network interface.
+                  type: object
+                osie:
+                  description: |-
+                    OSIE describes the Operating System Installation Environment (OSIE) to be used when booting.
+                    This will be used by default for all network interfaces unless overridden by the NetworkInterfaces.MAC.OSIE field.
+                  properties:
+                    initrdUrl:
+                      description: InitrdURL is a URL to an initrd image used for the installation environment.
+                      format: url
+                      type: string
+                    ipxe:
+                      description: IPXE provides iPXE script override fields. This is useful for debugging or netboot customization.
+                      properties:
+                        content:
+                          description: Content is an inline iPXE script.
+                          type: string
+                        url:
+                          description: URL is a URL to a hosted iPXE script.
+                          type: string
+                      type: object
+                    isoUrl:
+                      description: ISOURL is the URL of the ISO that will be used for the installation environment.A spec.BmcRef must be provided.
+                      format: url
+                      type: string
+                    kernelParams:
+                      description: KernelParams passed to the kernel when launching the OSIE. Parameters are joined with a space.
+                      items:
+                        type: string
+                      type: array
+                    kernelUrl:
+                      description: KernelURL is a URL to a kernel image used for the installation environment.
+                      format: url
+                      type: string
+                  type: object
+                storageDevices:
+                  description: StorageDevices is a list of storage devices that exist in the Hardware.
+                  items:
+                    description: "StorageDevice describes a storage device path that exist in the Hardware.\nStorageDevices must be valid Linux paths. They should not contain partitions.\n\nGood\n\n\t/dev/sda\n\t/dev/nvme0n1\n\nBad (contains partitions)\n\n\t/dev/sda1\n\t/dev/nvme0n1p1\n\nBad (invalid Linux path)\n\n\t\\dev\\sda"
+                    pattern: ^(/[^/ ]*)+/?$
+                    type: string
+                  type: array
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources: {}

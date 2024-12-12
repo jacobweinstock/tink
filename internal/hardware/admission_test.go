@@ -30,6 +30,10 @@ const (
 
 const DHCPEnabled = "DHCP enabled but no DHCP config"
 
+func toPointer[T any](val T) *T {
+	return &val
+}
+
 func TestAdmissionHandler(t *testing.T) {
 	scheme := runtime.NewScheme()
 	_ = v1alpha2.AddToScheme(scheme)
@@ -65,12 +69,12 @@ func TestAdmissionHandler(t *testing.T) {
 					NetworkInterfaces: v1alpha2.NetworkInterfaces{
 						"00:00:00:00:00:00": v1alpha2.NetworkInterface{DisableDHCP: true},
 						"00:00:00:00:00:01": v1alpha2.NetworkInterface{
-							DHCP: &v1alpha2.DHCP{
+							IPAM: &v1alpha2.IPAM{
 								IP: "1.1.1.1",
 							},
 						},
 						"00:00:00:00:00:02": v1alpha2.NetworkInterface{
-							DHCP: &v1alpha2.DHCP{
+							IPAM: &v1alpha2.IPAM{
 								IP: "2.2.2.2",
 							},
 						},
@@ -115,7 +119,7 @@ func TestAdmissionHandler(t *testing.T) {
 					NetworkInterfaces: v1alpha2.NetworkInterfaces{
 						"00:00:00:00:00:00": v1alpha2.NetworkInterface{DisableDHCP: true},
 						"00:00:00:00:00:01": v1alpha2.NetworkInterface{
-							DHCP: &v1alpha2.DHCP{
+							IPAM: &v1alpha2.IPAM{
 								IP: "1.1.1.1",
 							},
 						},
@@ -130,7 +134,7 @@ func TestAdmissionHandler(t *testing.T) {
 					Spec: v1alpha2.HardwareSpec{
 						NetworkInterfaces: v1alpha2.NetworkInterfaces{
 							"00:00:00:00:00:02": v1alpha2.NetworkInterface{
-								DHCP: &v1alpha2.DHCP{
+								IPAM: &v1alpha2.IPAM{
 									IP: "2.2.2.2",
 								},
 							},
@@ -181,9 +185,9 @@ func TestAdmissionHandler(t *testing.T) {
 				Spec: v1alpha2.HardwareSpec{
 					NetworkInterfaces: v1alpha2.NetworkInterfaces{
 						"00:00:00:00:00:0": v1alpha2.NetworkInterface{
-							DHCP: &v1alpha2.DHCP{
+							IPAM: &v1alpha2.IPAM{
 								IP:      "0.0.0.0",
-								Netmask: "255.255.255.0",
+								Netmask: toPointer("255.255.255.0"),
 							},
 						},
 					},
@@ -197,9 +201,9 @@ func TestAdmissionHandler(t *testing.T) {
 				Spec: v1alpha2.HardwareSpec{
 					NetworkInterfaces: v1alpha2.NetworkInterfaces{
 						"AA:BB:CC:DD:EE:FF": v1alpha2.NetworkInterface{
-							DHCP: &v1alpha2.DHCP{
+							IPAM: &v1alpha2.IPAM{
 								IP:      "0.0.0.0",
-								Netmask: "255.255.255.0",
+								Netmask: toPointer("255.255.255.0"),
 							},
 						},
 					},
@@ -283,12 +287,12 @@ func TestAdmissionHandler(t *testing.T) {
 				Spec: v1alpha2.HardwareSpec{
 					NetworkInterfaces: v1alpha2.NetworkInterfaces{
 						"00:00:00:00:00:00": v1alpha2.NetworkInterface{
-							DHCP: &v1alpha2.DHCP{
+							IPAM: &v1alpha2.IPAM{
 								IP: "1.1.1.1",
 							},
 						},
 						"00:00:00:00:00:01": v1alpha2.NetworkInterface{
-							DHCP: &v1alpha2.DHCP{
+							IPAM: &v1alpha2.IPAM{
 								IP: "1.1.1.1",
 							},
 						},
@@ -303,7 +307,7 @@ func TestAdmissionHandler(t *testing.T) {
 				Spec: v1alpha2.HardwareSpec{
 					NetworkInterfaces: v1alpha2.NetworkInterfaces{
 						"00:00:00:00:00:00": v1alpha2.NetworkInterface{
-							DHCP: &v1alpha2.DHCP{
+							IPAM: &v1alpha2.IPAM{
 								IP: "1.1.1.1",
 							},
 						},
@@ -315,7 +319,7 @@ func TestAdmissionHandler(t *testing.T) {
 					Spec: v1alpha2.HardwareSpec{
 						NetworkInterfaces: v1alpha2.NetworkInterfaces{
 							"00:00:00:00:00:01": v1alpha2.NetworkInterface{
-								DHCP: &v1alpha2.DHCP{
+								IPAM: &v1alpha2.IPAM{
 									IP: "1.1.1.1",
 								},
 							},

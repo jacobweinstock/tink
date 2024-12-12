@@ -118,6 +118,13 @@ generate-crds: $(CONTROLLER_GEN) $(YAMLFMT)
 		output:webhook:dir=./config/webhook \
 		webhook
 	$(YAMLFMT) ./config/crd/bases/* ./config/webhook/*
+	$(CONTROLLER_GEN) \
+		paths=./api/v1alpha2/... \
+		crd:crdVersions=v1 \
+		output:crd:dir=./config/crd/bases/v1alpha2 \
+		output:webhook:dir=./config/webhook/v1alpha2 \
+		webhook
+	$(YAMLFMT) ./config/crd/bases/v1alpha2/* ./config/webhook/v1alpha2/*
 
 .PHONY: generate-rbac
 generate-rbac: generate-controller-rbac generate-server-rbac $(CONTROLLER_GEN) $(YAMLFMT)

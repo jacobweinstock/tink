@@ -1,0 +1,129 @@
+apiVersion: "tinkerbell.org/v1alpha2"
+kind: Hardware
+metadata:
+  name: myhardware
+  namespace: example
+spec:
+  networkInterfaces:
+    de:ad:be:ef:fe:ed:
+      ipam:
+        ipType: IPv4
+        ip: 192.168.2.3
+        netmask: 255.255.255.0
+        gateway: 192.168.2.1
+        prefix: 64
+        hostname: myhost
+        vlanId: 100
+        nameservers:
+        - 1.1.1.1
+        timeservers:
+        - 2.2.2.2
+        leaseTimeSeconds: 86400
+      disableDhcp: true
+      disableNetboot: true
+      osie:
+        kernelUrl: http://nginx:8080/vmlinuz-x86_64
+        initrdUrl: http://nginx:8080/initrd-x86_64
+        kernelParams:
+        - initrd=initrd.img
+        - root=live:http://
+        - tink_worker_image=quay.io/tinkerbell/tink-agent:v0.4.0
+        isoUrl: http://nginx:8080/iso/de:ad:be:ef:fe:ed/osie.iso
+        ipxe:
+          content: "#!ipxe"
+          url: http://netboot.xyz
+  osie:
+    kernelUrl: http://nginx:8080/vmlinuz-x86_64
+    initrdUrl: http://nginx:8080/initrd-x86_64
+    kernelParams:
+    - initrd=initrd.img
+    - root=live:http://
+    - tink_worker_image=quay.io/tinkerbell/tink-agent:v0.4.0
+    isoUrl: http://nginx:8080/iso/de:ad:be:ef:fe:ed/osie.iso
+    ipxe:
+      content: "#!ipxe"
+      url: http://netboot.xyz
+  instance:
+    userdata: im some userdata
+    vendordata: im some vendordata
+  storageDevices:
+  - /dev/sda
+  - /dev/sdb
+  bmcRef:
+    name: mybmc
+---
+apiVersion: "tinkerbell.org/v1alpha2"
+kind: Workflow     
+metadata:
+  name: myworkflow
+  namespace: example
+spec:
+  actions:
+  - name: action 1
+    image: alpine
+    cmd: /bin/sh
+    args:
+    - -c
+    - echo hello world
+    env:
+      local: key
+    volumes:
+    - /local/action/specified/data:/data:ro
+    namespaces:
+      network: host
+      pid: host
+    timeout: 60
+    background: true
+    retries: 3
+  - name: action 2
+    image: alpine
+    cmd: /bin/sh
+    args:
+    - -c
+    - echo hello world, this is action 2
+    env:
+      local: key
+    volumes:
+    - /local/action/specified/data:/data:ro
+    namespaces:
+      network: host
+      pid: host
+    timeout: 60
+    background: true
+    retries: 3
+  volumes:
+  - /global/specified/data:/data:ro
+  env:
+    global: value
+  logging:
+    driver: fluentd
+    options:
+      fluentd-address: fluentdhost:24224
+---
+apiVersion: "tinkerbell.org/v1alpha2"
+kind: Pipeline
+metadata:
+  name: mypipeline
+  namespace: example
+spec:
+  bootOptions:
+    toggleAllowNetboot: true
+    isoURL: http://smee:7171/iso/de:ad:be:ef:fe:ed/hook.iso
+    bootMode: isoboot
+  templateParams:
+    key: value
+  timeout: 6000
+  workflows:
+  - agentId: de:ad:be:ef:fe:ed
+    bootOptions:
+      toggleAllowNetboot: true
+      isoURL: http://smee:7171/iso/de:ad:be:ef:fe:ed/hook.iso
+      bootMode: isoboot
+    workflowRef:
+      name: myblueprint
+    hardwareRef:
+      name: myhardware
+    templateParams:
+      key: value
+    timeout: 600
+  

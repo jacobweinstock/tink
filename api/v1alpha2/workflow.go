@@ -1,140 +1,125 @@
 package v1alpha2
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type WorkflowSpec struct {
-	// HardwareRef is a reference to a Hardware resource this workflow will execute on.
-	HardwareRef corev1.LocalObjectReference `json:"hardwareRef,omitempty"`
+	// Actions defines the set of Actions to be run by an Agent. Actions are run sequentially
+	// in the order they are specified. At least 1 Action must be specified. Names of Actions
+	// must be unique within a Workflow.
+	// +kubebuilder:validation:MinItems=1
+	Actions []Action `json:"actions,omitempty"`
 
-	// TemplateRef is a reference to a Template resource used to render workflow actions.
-	TemplateRef corev1.LocalObjectReference `json:"templateRef,omitempty"`
-
-	// TemplateParams are a list of key-value pairs that are injected into templates at render
-	// time. TemplateParams are exposed to templates using a top level .Params key.
-	//
-	// For example, TemplateParams = {"foo": "bar"}, the foo key can be accessed via .Params.foo.
+	// Volumes to be mounted on all Actions. If an Action specifies the same volume it will take
+	// precedence.
 	// +optional
-	TemplateParams map[string]string `json:"templateParams,omitempty"`
+	Volumes []Volume `json:"volumes,omitempty"`
 
-	// TimeoutSeconds defines the time the workflow has to complete. The timer begins when the first
-	// action is requested. When set to 0, no timeout is applied.
+	// Env defines environment variables to be available in all Actions. If an Action specifies
+	// the same environment variable it will take precedence.
+	// +optional
+	Env map[string]string `json:"env,omitempty"`
+
+	// Logging defines the logging configuration for all Action containers. If not specified the
+	// default runtime configured logging driver is used. This is Agent and runtime specific.
+	// +optional
+	Logging *Logging `json:"logging,omitempty"`
+}
+
+// Action defines an individual Action to be run on a target machine.
+type Action struct {
+	// Name is a name for the Action.
+	Name string `json:"name"`
+
+	// Image is fully qualified OCI image name.
+	Image string `json:"image"`
+
+	// Cmd defines the command to use when launching the image. It overrides the default command
+	// of the Action. It must be a unix path to an executable program.
+	// +optional
+	Cmd *string `json:"cmd,omitempty"`
+
+	// Args are a set of arguments to be passed to the command executed by the container on
+	// launch.
+	// +optional
+	Args []string `json:"args,omitempty"`
+
+	// Env defines environment variables used when launching the container.
+	//+optional
+	Env map[string]string `json:"env,omitempty"`
+
+	// Volumes defines the volumes to mount into the container.
+	// +optional
+	Volumes []Volume `json:"volumes,omitempty"`
+
+	// Namespace defines the Linux namespaces this container should execute in.
+	// +optional
+	Namespace *Namespace `json:"namespaces,omitempty"`
+
+	// TimeoutSeconds defines the time the Action has to complete. The timer begins when the action is requested.
+	// When set to 0, no timeout is applied.
 	// +kubebuilder:default=0
 	// +kubebuilder:validation:Minimum=0
-	TimeoutSeconds int64 `json:"timeout,omitempty"`
-}
+	TimeoutSeconds *int64 `json:"timeout,omitempty"`
 
-type WorkflowStatus struct {
-	// Actions is a list of action states.
-	Actions []ActionStatus `json:"actions"`
-
-	// StartedAt is the time the first action was requested. Nil indicates the Workflow has not
-	// started.
+	// Background true will run the container in background. The Agent will immediately report the Action as succeeded.
 	// +optional
-	StartedAt *metav1.Time `json:"startedAt,omitempty"`
+	Background *bool `json:"background,omitempty"`
 
-	// LastTransition is the observed time when State transitioned last.
-	LastTransition metav1.Time `json:"lastTransitioned,omitempty"`
-
-	// State describes the current state of the Workflow.
-	State WorkflowState `json:"state,omitempty"`
-
-	// Conditions details a set of observations about the Workflow.
+	// Retries defines the number of times to retry the Action if it fails. Retries are only attempted on non-zero exit codes.
 	// +optional
-	Conditions Conditions `json:"conditions"`
+	Retries *int32 `json:"retries,omitempty"`
 }
 
-// ActionStatus describes status information about an action.
-type ActionStatus struct {
-	// Rendered is the rendered action.
-	Rendered Action `json:"rendered,omitempty"`
+// Volume is a specification for mounting a volume in an Action. Volumes take the form
+// {SRC-VOLUME-NAME | SRC-HOST-DIR}:TGT-CONTAINER-DIR:OPTIONS. When specifying a VOLUME-NAME that
+// does not exist it will be created for you. Examples:
+//
+// Read-only bind mount bound to /data
+//
+//	/etc/data:/data:ro
+//
+// Writable volume name bound to /data
+//
+//	shared_volume:/data
+//
+// See https://docs.docker.com/storage/volumes/ for additional details.
+type Volume string
 
-	// ID uniquely identifies the action status.
-	ID string `json:"id"`
+// Namespace defines the Linux namespaces to use for the container.
+// See https://man7.org/linux/man-pages/man7/namespaces.7.html.
+type Namespace struct {
+	// Network defines the network namespace.
+	// +optional
+	Network *string `json:"network,omitempty"`
 
-	// StartedAt is the time the action was started as reported by the client. Nil indicates the
-	// Action has not started.
-	StartedAt *metav1.Time `json:"startedAt,omitempty"`
-
-	// LastTransition is the observed time when State transitioned last.
-	LastTransition *metav1.Time `json:"lastTransitioned,omitempty"`
-
-	// State describes the current state of the action.
-	State ActionState `json:"state,omitempty"`
-
-	// FailureReason is a short CamelCase word or phrase describing why the Action entered
-	// ActionStateFailed.
-	FailureReason string `json:"failureReason,omitempty"`
-
-	// FailureMessage is a free-form user friendly message describing why the Action entered the
-	// ActionStateFailed state. Typically, this is an elaboration on the Reason.
-	FailureMessage string `json:"failureMessage,omitempty"`
+	// PID defines the PID namespace
+	// +optional
+	PID *string `json:"pid,omitempty"`
 }
 
-// State describes the point in time state of a Workflow.
-type WorkflowState string
+// Logging defines
+type Logging struct {
+	// Driver is the logging driver to use for the container.
+	Driver string `json:"driver,omitempty"`
 
-const (
-	// WorkflowStatePending indicates the Workflow is awaiting dispatch to the agent.
-	WorkflowStatePending WorkflowState = "Pending"
-
-	// WorkflowStateScheduled indicates the Workflow has been dispatched to the agent but the agent
-	// is yet to report the Workflow has started.
-	WorkflowStateScheduled WorkflowState = "Scheduled"
-
-	// WorkflowStateRunning indicates the Workflow has begun executing.
-	WorkflowStateRunning WorkflowState = "Running"
-
-	// WorkflowStateCancelling indicates the agent has been instructed to cancel the Workflow, but
-	// the cancellation is yet to be completed.
-	WorkflowStateCancelling WorkflowState = "Cancelling"
-
-	// WorkflowStateSucceeded indicates all Actions have successfully completed.
-	WorkflowStateSucceeded WorkflowState = "Succeeded"
-
-	// WorkflowStateFailed indicates an Action failed.
-	WorkflowStateFailed WorkflowState = "Failed"
-
-	// WorkflowStateCanceled indicates the Workflow has been canceled.
-	WorkflowStateCanceled WorkflowState = "Canceled"
-)
-
-// ActionState describes a point in time state of an Action.
-type ActionState string
-
-const (
-	// ActionStatePending indicates an Action is awaiting execution.
-	ActionStatePending ActionState = "Pending"
-
-	// ActionStateRunning indicates an Action has begun execution.
-	ActionStateRunning ActionState = "Running"
-
-	// ActionStateSucceeded indicates an Action completed execution successfully.
-	ActionStateSucceeded ActionState = "Succeeded"
-
-	// ActionStatFailed indicates an Action failed to execute. Users may inspect the associated
-	// Workflow resource to gain deeper insights into why the action failed.
-	ActionStateFailed ActionState = "Failed"
-)
+	// Options are the logging options to use for the container.
+	Options map[string]string `json:"options,omitempty"`
+}
 
 // +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:categories=tinkerbell,shortName=wf
-// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state",description="State of the workflow such as Pending,Running etc"
-// +kubebuilder:printcolumn:name="Hardware",type="string",JSONPath=".spec.hardwareRef",description="Hardware object that runs the workflow"
-// +kubebuilder:printcolumn:name="Template",type="string",JSONPath=".spec.templateRef",description="Template to run on the associated Hardware"
-// +kubebuilder:unservedversion
+// +kubebuilder:resource:categories=tinkerbell,shortName=bp
 
-// Workflow describes a set of actions to be run on a specific Hardware. Workflows execute
-// once and should be considered ephemeral.
+// Workflow defines a set of Actions to be run on a target machine. The Workflow is rendered
+// prior to execution where it is exposed to Hardware and user defined data. Most fields within the
+// WorkflowSpec may contain templates values excluding .Workflow.Spec.Actions[].Name.
+// See https://pkg.go.dev/text/template for more details.
 type Workflow struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   WorkflowSpec   `json:"spec,omitempty"`
-	Status WorkflowStatus `json:"status,omitempty"`
+	Spec WorkflowSpec `json:"spec,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -142,7 +127,7 @@ type Workflow struct {
 type WorkflowList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Workflow `json:"items,omitempty"`
+	Items           []Workflow `json:"items"`
 }
 
 func init() {

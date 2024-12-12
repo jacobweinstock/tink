@@ -10,7 +10,7 @@ import (
 
 func (a *Admission) validateConditionalFields(hw *v1alpha2.Hardware) admission.Response {
 	for mac, ni := range hw.Spec.NetworkInterfaces {
-		if ni.IsDHCPEnabled() && ni.DHCP == nil {
+		if ni.IsDHCPEnabled() && ni.IPAM == nil {
 			return admission.Errored(http.StatusBadRequest, fmt.Errorf(
 				"network interface for %v has DHCP enabled but no DHCP config",
 				mac,

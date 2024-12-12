@@ -59,7 +59,7 @@ spec:
                   description: BootOptions are options that control the booting of Hardware.
                   properties:
                     bootMode:
-                      description: BootMode is the type of booting that will be done.
+                      description: BootMode is the type of booting that will be done. One of "netboot" or "iso".
                       enum:
                         - netboot
                         - iso

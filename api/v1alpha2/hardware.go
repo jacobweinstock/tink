@@ -10,30 +10,47 @@ type HardwareSpec struct {
 	// +kubebuilder:validation:MinPoperties=1
 	NetworkInterfaces NetworkInterfaces `json:"networkInterfaces,omitempty"`
 
-	// IPXE provides iPXE script override fields. This is useful for debugging or netboot
-	// customization.
-	// +optional.
-	IPXE *IPXE `json:"ipxe,omitempty"`
-
-	// OSIE describes the Operating System Installation Environment to be netbooted.
-	OSIE corev1.LocalObjectReference `json:"osie,omitempty"`
-
-	// KernelParams passed to the kernel when launching the OSIE. Parameters are joined with a
-	// space.
+	// OSIE describes the Operating System Installation Environment (OSIE) to be used when booting.
+	// This will be used by default for all network interfaces unless overridden by the NetworkInterfaces.MAC.OSIE field.
 	// +optional
-	KernelParams []string `json:"kernelParams,omitempty"`
+	OSIE *OSIE `json:"osie,omitempty"`
 
 	// Instance describes instance specific data that is generally unused by Tinkerbell core.
 	// +optional
 	Instance *Instance `json:"instance,omitempty"`
 
-	// StorageDevices is a list of storage devices that will be available in the OSIE.
+	// StorageDevices is a list of storage devices that exist in the Hardware.
 	// +optional.
 	StorageDevices []StorageDevice `json:"storageDevices,omitempty"`
 
-	// BMCRef references a Rufio Machine object.
+	// BMCRef references a machine.bmc.tinkerbell.org object.
 	// +optional.
 	BMCRef *corev1.LocalObjectReference `json:"bmcRef,omitempty"`
+}
+
+type OSIE struct {
+	// KernelURL is a URL to a kernel image used for the installation environment.
+	// +kubebuilder:validation:Format=url
+	// +optional
+	KernelURL string `json:"kernelUrl,omitempty"`
+
+	// InitrdURL is a URL to an initrd image used for the installation environment.
+	// +kubebuilder:validation:Format=url
+	// +optional
+	InitrdURL string `json:"initrdUrl,omitempty"`
+
+	// KernelParams passed to the kernel when launching the OSIE. Parameters are joined with a space.
+	// +optional
+	KernelParams []string `json:"kernelParams,omitempty"`
+
+	// ISOURL is the URL of the ISO that will be used for the installation environment.A spec.BmcRef must be provided.
+	// +kubebuilder:validation:Format=url
+	// +optional
+	ISOURL string `json:"isoUrl,omitempty"`
+
+	// IPXE provides iPXE script override fields. This is useful for debugging or netboot customization.
+	// +optional.
+	IPXE *IPXE `json:"ipxe,omitempty"`
 }
 
 // NetworkInterfaces maps a MAC address to a NetworkInterface.
@@ -41,19 +58,22 @@ type NetworkInterfaces map[MAC]NetworkInterface
 
 // NetworkInterface is the desired configuration for a particular network interface.
 type NetworkInterface struct {
-	// DHCP is the basic network information for serving DHCP requests. Required when DisbaleDHCP
-	// is false.
+	// IPAM is the basic network information for serving IPAM requests. Required when DisableDHCP is false.
 	// +optional
-	DHCP *DHCP `json:"dhcp,omitempty"`
+	IPAM *IPAM `json:"ipam,omitempty"`
 
 	// DisableDHCP disables DHCP for this interface. Implies DisableNetboot.
 	// +kubebuilder:default=false
 	DisableDHCP bool `json:"disableDhcp,omitempty"`
 
-	// DisableNetboot disables netbooting for this interface. The interface will still receive
-	// network information specified by DHCP.
+	// DisableNetboot disables networking booting for this interface.
 	// +kubebuilder:default=false
 	DisableNetboot bool `json:"disableNetboot,omitempty"`
+
+	// OSIE describes the Operating System Installation Environment (OSIE) to be used when booting.
+	// This field overrides the OSIE field in the top level .spec.OSIE.
+	// +optional
+	OSIE *OSIE `json:"osie,omitempty"`
 }
 
 // IsDHCPEnabled checks if DHCP is enabled for ni.
@@ -66,18 +86,34 @@ func (ni NetworkInterface) IsNetbootEnabled() bool {
 	return !ni.DisableNetboot
 }
 
-// DHCP describes basic network configuration to be served in DHCP OFFER responses. It can be
-// considered a DHCP reservation.
-type DHCP struct {
-	// IP is an IPv4 address to serve.
+type IPType string
+
+const (
+	IPv4Type IPType = "IPv4"
+	IPv6Type IPType = "IPv6"
+)
+
+// IPAM describes basic IP address management configuration. It can be considered a DHCP reservation.
+type IPAM struct {
+	// IPType is the type of IP address to serve. Defaults to IPv4. Must be either IPv4 or IPv6.
+	// +kubebuilder:default=IPv4
+	// +kubebuilder:validation:Enum=IPv4;IPv6
+	IPType IPType `json:"ipType,omitempty"`
+
+	// IP is an address. Can be either an IPv4 or IPv6 address but must match the IPType field.
 	// +kubebuilder:validation:Pattern=`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`
 	IP string `json:"ip,omitempty"`
 
-	// Netmask is an IPv4 netmask to serve.
+	// Netmask is an IPv4 netmask. When IPType=IPv4, this field is required. Otherwise, it is ignored.
 	// +kubebuilder+validation:Pattern=`^(255)\.(0|128|192|224|240|248|252|254|255)\.(0|128|192|224|240|248|252|254|255)\.(0|128|192|224|240|248|252|254|255)`
-	Netmask string `json:"netmask,omitempty"`
+	// +optional
+	Netmask *string `json:"netmask,omitempty"`
 
-	// Gateway is the default gateway address to serve.
+	// Prefix is an IPv6 prefix length. When IPType=IPv6, this field is required. Otherwise, it is ignored.
+	// +optional
+	Prefix *int32 `json:"prefix,omitempty"`
+
+	// Gateway is the default gateway address to serve. Can be either an IPv4 or IPv6 address but must match the IPType field.
 	// +kubebuilder:validation:Pattern=`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`
 	// +optional
 	Gateway *string `json:"gateway,omitempty"`
@@ -87,9 +123,10 @@ type DHCP struct {
 	Hostname *string `json:"hostname,omitempty"`
 
 	// VLANID is a VLAN ID between 0 and 4096.
-	// +kubebuilder:validation:Pattern=`^(([0-9][0-9]{0,2}|[1-3][0-9][0-9][0-9]|40([0-8][0-9]|9[0-6]))(,[1-9][0-9]{0,2}|[1-3][0-9][0-9][0-9]|40([0-8][0-9]|9[0-6]))*)$`
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=4096
 	// +optional
-	VLANID *string `json:"vlanId,omitempty"`
+	VLANID *int32 `json:"vlanId,omitempty"`
 
 	// Nameservers to serve.
 	// +optional
@@ -105,14 +142,14 @@ type DHCP struct {
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=4294967295
 	// +optional
-	LeaseTimeSeconds *int64 `json:"leaseTimeSeconds"`
+	LeaseTimeSeconds *int64 `json:"leaseTimeSeconds,omitempty"`
 }
 
 // IPXE describes overrides for IPXE scripts. At least 1 option must be specified.
 type IPXE struct {
 	// Content is an inline iPXE script.
 	// +optional
-	Content *string `json:"inline,omitempty"`
+	Content *string `json:"content,omitempty"`
 
 	// URL is a URL to a hosted iPXE script.
 	// +optional
@@ -144,7 +181,7 @@ type Nameserver string
 // +kubebuilder:validation:Pattern=`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$|^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`
 type Timeserver string
 
-// StorageDevice describes a storage device path that will be present in the OSIE.
+// StorageDevice describes a storage device path that exist in the Hardware.
 // StorageDevices must be valid Linux paths. They should not contain partitions.
 //
 // Good
@@ -167,7 +204,6 @@ type StorageDevice string
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:categories=tinkerbell,path=hardware,shortName=hw
 // +kubebuilder:printcolumn:name="BMC",type="string",JSONPath=".spec.bmcRef",description="Baseboard management computer attached to the Hardware"
-// +kubebuilder:unservedversion
 
 // Hardware is a logical representation of a machine that can execute Workflows.
 type Hardware struct {
@@ -190,8 +226,8 @@ func (h *Hardware) GetMACs() []string {
 func (h *Hardware) GetIPs() []string {
 	var ips []string
 	for _, ni := range h.Spec.NetworkInterfaces {
-		if ni.DHCP != nil {
-			ips = append(ips, ni.DHCP.IP)
+		if ni.IPAM != nil {
+			ips = append(ips, ni.IPAM.IP)
 		}
 	}
 	return ips

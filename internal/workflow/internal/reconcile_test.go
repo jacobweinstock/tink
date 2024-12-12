@@ -22,7 +22,7 @@ func TestReconcileContext(t *testing.T) {
 	ctx := context.Background()
 
 	hw := newHardware(func(*tinkv1.Hardware) {})
-	tmpl := newTemplate(func(t *tinkv1.Template) {
+	tmpl := newWorkflow(func(t *tinkv1.Workflow) {
 		t.Spec.Actions = []tinkv1.Action{
 			{
 				Name:  "action",
@@ -31,14 +31,14 @@ func TestReconcileContext(t *testing.T) {
 			},
 		}
 	})
-	wrkflw := newWorkflow(func(w *tinkv1.Workflow) {
-		w.Spec.HardwareRef = corev1.LocalObjectReference{Name: hw.Name}
-		w.Spec.TemplateRef = corev1.LocalObjectReference{Name: tmpl.Name}
-		w.Spec.TemplateParams = map[string]string{"Foo": "Bar"}
+	wrkflw := newPipeline(func(w *tinkv1.Pipeline) {
+		w.Spec.Workflows[0].HardwareRef = corev1.LocalObjectReference{Name: hw.Name}
+		w.Spec.Workflows[0].WorkflowRef = corev1.LocalObjectReference{Name: tmpl.Name}
+		w.Spec.Workflows[0].TemplateParams = map[string]string{"Foo": "Bar"}
 	})
 
 	expectWrkflw := wrkflw.DeepCopy()
-	expectWrkflw.Status.Actions = []tinkv1.ActionStatus{
+	expectWrkflw.Status.Workflows = []tinkv1.ActionStatus{
 		{
 			Rendered: newAction(func(a *tinkv1.Action) {
 				a.Name = "action"
@@ -64,7 +64,7 @@ func TestReconcileContext(t *testing.T) {
 	reconcileCtx := ReconciliationContext{
 		Client:      clnt,
 		Log:         logger,
-		Workflow:    wrkflw,
+		Pipeline:    wrkflw,
 		NewActionID: newActionID,
 	}
 	_, err := reconcileCtx.Reconcile(ctx)
@@ -77,8 +77,8 @@ func TestReconcileContext(t *testing.T) {
 	}
 }
 
-func newWorkflow(fn func(*tinkv1.Workflow)) *tinkv1.Workflow {
-	w := &tinkv1.Workflow{
+func newPipeline(fn func(*tinkv1.Pipeline)) *tinkv1.Pipeline {
+	w := &tinkv1.Pipeline{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "Workflow",
 			APIVersion: tinkv1.GroupVersion.String(),
@@ -86,14 +86,16 @@ func newWorkflow(fn func(*tinkv1.Workflow)) *tinkv1.Workflow {
 		ObjectMeta: v1.ObjectMeta{
 			Name: "workflow",
 		},
-		Spec: tinkv1.WorkflowSpec{},
+		Spec: tinkv1.PipelineSpec{
+			Workflows: make([]tinkv1.PipelineWorkflow, 1),
+		},
 	}
 	fn(w)
 	return w
 }
 
-func newTemplate(fn func(*tinkv1.Template)) *tinkv1.Template {
-	t := &tinkv1.Template{
+func newWorkflow(fn func(*tinkv1.Workflow)) *tinkv1.Workflow {
+	t := &tinkv1.Workflow{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "Template",
 			APIVersion: tinkv1.GroupVersion.String(),

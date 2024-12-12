@@ -17,8 +17,8 @@ import (
 
 // ReconciliationContext reconciles Workflow resources when created or updated.
 type ReconciliationContext struct {
-	// Workflow is the Workflow instance we're reconciling.
-	Workflow *tinkv1.Workflow
+	// Pipeline is the Pipeline instance we're reconciling.
+	Pipeline *tinkv1.Pipeline
 
 	// NewActionID generated unique IDs for actions. Defaults to generating UUIDv4s.
 	NewActionID func() string
@@ -29,51 +29,51 @@ type ReconciliationContext struct {
 
 // Reconcile reconciles the Workflow.
 func (rc ReconciliationContext) Reconcile(ctx context.Context) (reconcile.Result, error) {
-	tmplRef := client.ObjectKey{
-		Name:      rc.Workflow.Spec.TemplateRef.Name,
-		Namespace: rc.Workflow.Namespace,
+	wfRef := client.ObjectKey{
+		Name:      rc.Pipeline.Spec.Workflows[0].WorkflowRef.Name,
+		Namespace: rc.Pipeline.Namespace,
 	}
-	var tmpl tinkv1.Template
-	if err := rc.Client.Get(ctx, tmplRef, &tmpl); err != nil {
+	var tmpl tinkv1.Workflow
+	if err := rc.Client.Get(ctx, wfRef, &tmpl); err != nil {
 		if errors.IsNotFound(err) {
 			// The Template may yet to be submitted to the cluster so just requeue.
-			rc.Log.Info("Template not found; requeue in 5 seconds", "ref", tmplRef)
+			rc.Log.Info("Template not found; requeue in 5 seconds", "ref", wfRef)
 			return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
 		}
 		return reconcile.Result{}, err
 	}
 
 	hwRef := client.ObjectKey{
-		Name:      rc.Workflow.Spec.HardwareRef.Name,
-		Namespace: rc.Workflow.Namespace,
+		Name:      rc.Pipeline.Spec.Workflows[0].HardwareRef.Name,
+		Namespace: rc.Pipeline.Namespace,
 	}
 	var hw tinkv1.Hardware
 	if err := rc.Client.Get(ctx, hwRef, &hw); err != nil {
 		if errors.IsNotFound(err) {
 			// The Hardware may yet to be submitted to the cluster so just requeue.
-			rc.Log.Info("Hardware not found; requeue in 5 seconds", "ref", tmplRef)
+			rc.Log.Info("Hardware not found; requeue in 5 seconds", "ref", wfRef)
 			return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
 		}
 		return reconcile.Result{}, err
 	}
 
 	// Only render the template and configure action status if its not been done before.
-	if len(rc.Workflow.Status.Actions) == 0 {
+	if len(rc.Pipeline.Status.Workflows) == 0 {
 		tmpl, err := rc.renderTemplate(tmpl, &hw)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 
-		rc.Workflow.Status.Actions = rc.toActionStatus(tmpl.Spec.Actions)
+		rc.Pipeline.Status.Workflows = rc.toActionStatus(tmpl.Spec.Actions)
 	}
 
 	return reconcile.Result{}, nil
 }
 
-func (rc ReconciliationContext) renderTemplate(tpl tinkv1.Template, hw *tinkv1.Hardware) (tinkv1.Template, error) {
+func (rc ReconciliationContext) renderTemplate(tpl tinkv1.Workflow, hw *tinkv1.Hardware) (tinkv1.Workflow, error) {
 	tplYAML, err := yaml.Marshal(tpl)
 	if err != nil {
-		return tinkv1.Template{}, err
+		return tinkv1.Workflow{}, err
 	}
 
 	renderer, err := template.New("").
@@ -81,21 +81,21 @@ func (rc ReconciliationContext) renderTemplate(tpl tinkv1.Template, hw *tinkv1.H
 		Funcs(workflowTemplateFuncs).
 		Parse(string(tplYAML))
 	if err != nil {
-		return tinkv1.Template{}, err
+		return tinkv1.Workflow{}, err
 	}
 
 	tplData := map[string]any{
 		"Hardware": hw.Spec,
-		"Param":    rc.Workflow.Spec.TemplateParams,
+		"Param":    rc.Pipeline.Spec.TemplateParams,
 	}
 
 	var renderedTplYAML bytes.Buffer
 	if err := renderer.Execute(&renderedTplYAML, tplData); err != nil {
-		return tinkv1.Template{}, err
+		return tinkv1.Workflow{}, err
 	}
 
 	if err := yaml.Unmarshal(renderedTplYAML.Bytes(), &tpl); err != nil {
-		return tinkv1.Template{}, err
+		return tinkv1.Workflow{}, err
 	}
 
 	return tpl, nil

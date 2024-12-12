@@ -99,7 +99,7 @@ type BootOptions struct {
 	// +kubebuilder:validation:Format=url
 	ISOURL string `json:"isoURL,omitempty"`
 
-	// BootMode is the type of booting that will be done.
+	// BootMode is the type of booting that will be done. One of "netboot" or "iso".
 	// +optional
 	// +kubebuilder:validation:Enum=netboot;iso
 	BootMode BootMode `json:"bootMode,omitempty"`

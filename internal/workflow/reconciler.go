@@ -37,7 +37,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req reconcile.Request) (resu
 	logger := ctrl.LoggerFrom(ctx)
 	logger.Info("Reconciling")
 
-	wrkflw := &tinkv1.Workflow{}
+	wrkflw := &tinkv1.Pipeline{}
 	if err := r.client.Get(ctx, req.NamespacedName, wrkflw); err != nil {
 		if errors.IsNotFound(err) {
 			logger.Info("Workflow not found; discontinuing reconciliation")
@@ -53,12 +53,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req reconcile.Request) (resu
 	rc := internal.ReconciliationContext{
 		Client:   r.client,
 		Log:      logger,
-		Workflow: wrkflw.DeepCopy(),
+		Pipeline: wrkflw.DeepCopy(),
 	}
 
 	// Always attempt to patch.
 	defer func() {
-		if err := r.client.Status().Patch(ctx, rc.Workflow, client.MergeFrom(wrkflw)); err != nil {
+		if err := r.client.Status().Patch(ctx, rc.Pipeline, client.MergeFrom(wrkflw)); err != nil {
 			rerr = kerrors.NewAggregate([]error{rerr, err})
 		}
 	}()
@@ -68,6 +68,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req reconcile.Request) (resu
 
 func (r *Reconciler) SetupWithManager(mgr manager.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&tinkv1.Workflow{}).
+		For(&tinkv1.Pipeline{}).
 		Complete(r)
 }
